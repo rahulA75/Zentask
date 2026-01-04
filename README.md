@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Task Management System
+
+A comprehensive task management application built with Next.js 16, React 19, and TypeScript where managers can assign tasks to employees and themselves, and view detailed reports.
+
+## Features
+
+### 1. Task Assignment
+- **Assign to Employees**: Managers can assign tasks to any employee in their team
+- **Self-Assignment**: Managers can assign tasks to themselves
+- **Task Details**: Each task includes:
+  - Title
+  - Description
+  - Assignee
+  - Status (Pending, In Progress, Completed)
+  - Creation date
+
+### 2. Report Dashboard
+- **Task Statistics**:
+  - Total Tasks
+  - Pending Tasks
+  - In Progress Tasks
+  - Completed Tasks
+  - Self-Assigned Tasks (tasks assigned to manager themselves)
+
+- **Task List View**:
+  - View all tasks in a organized list
+  - Color-coded status badges
+  - Highlight self-assigned tasks
+  - Sort by creation date
+
+### 3. User Interface
+- Clean, modern design with dark mode support
+- Responsive layout that works on all devices
+- Intuitive navigation between Assign Task and Report views
+- Visual indicators for task status and self-assigned tasks
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: React 19
+- **Styling**: Tailwind CSS 4
+- **Language**: TypeScript
+- **Linting**: ESLint
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+/app
+  ├── page.tsx        # Main application component with task management logic
+  ├── layout.tsx      # Root layout
+  └── globals.css     # Global styles
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Assigning a Task
 
-## Deploy on Vercel
+1. Navigate to the "Assign Task" view (default view)
+2. Fill in the task title and description
+3. Select an assignee from the dropdown:
+   - Choose "Myself" to assign the task to yourself
+   - Choose an employee name to assign to that employee
+4. Click "Assign Task" button
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Viewing Reports
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Click the "View Report" button in the navigation
+2. View statistics cards showing:
+   - Total number of tasks
+   - Tasks by status (Pending, In Progress, Completed)
+   - Number of self-assigned tasks
+3. Scroll down to see a detailed list of all tasks
+4. Self-assigned tasks are highlighted in purple for easy identification
+
+## Features in Detail
+
+### Manager Capabilities
+- Create and assign tasks to team members
+- Assign tasks to themselves (self-assignment feature)
+- Track all tasks and their statuses
+- View comprehensive reports and statistics
+
+### Task Status Types
+- **Pending**: Newly created tasks
+- **In Progress**: Tasks currently being worked on
+- **Completed**: Finished tasks
+
+### Self-Assignment Tracking
+The system specifically tracks and highlights tasks that managers assign to themselves, making it easy to see which tasks the manager has taken on directly.
+
+## Build
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+To start the production server:
+
+```bash
+npm start
+```
+
+## Linting
+
+To run ESLint:
+
+```bash
+npm run lint
+```
+
+## License
+
+This project is for demonstration purposes.
