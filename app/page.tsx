@@ -1,49 +1,1363 @@
+'use client';
+
+import { useState } from 'react';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'manager' | 'employee';
+  avatar: string;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  project: string;
+  status: 'todo' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  assignedTo: string;
+  assignedBy: string;
+  createdAt: Date;
+  dueDate: Date;
+}
+
+interface Notification {
+  id: string;
+  message: string;
+  taskId: string;
+  read: boolean;
+  timestamp: Date;
+}
+
+interface Meeting {
+  id: string;
+  title: string;
+  time: string;
+  platform: 'meet' | 'zoom';
+  projectName: string;
+}
+
+interface Ticket {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  message: string;
+  timestamp: Date;
+}
+
+const allUsers = [
+  { id: '1', name: 'John Smith', email: 'manager@panze.studio', role: 'manager' as const, avatar: 'JS' },
+  { id: '2', name: 'Sarah Johnson', email: 'sarah@panze.studio', role: 'employee' as const, avatar: 'SJ' },
+  { id: '3', name: 'Mike Wilson', email: 'mike@panze.studio', role: 'employee' as const, avatar: 'MW' },
+  { id: '4', name: 'Emma Davis', email: 'emma@panze.studio', role: 'employee' as const, avatar: 'ED' }
+];
+
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-center gap-8 py-32 px-16 bg-white dark:bg-black">
-        <svg
-          viewBox="0 0 69 26"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="fill-black dark:fill-white"
-        >
-          <path d="M13.7917 24.3604C12.4622 25.3549 10.7895 25.8884 8.82032 25.8884C6.66971 25.8884 4.87412 25.3543 3.47587 24.3604H13.7917Z"></path>
-          <path d="M27.8204 24.3604C26.802 25.2894 25.534 25.8884 24.1756 25.8884C22.4188 25.8884 21.02 25.339 20.108 24.3604H27.8204Z"></path>
-          <path d="M44.5726 24.3604C43.0194 25.3511 41.0762 25.8884 38.8367 25.8884C36.5972 25.8884 34.6541 25.3511 33.1008 24.3604H44.5726Z"></path>
-          <path d="M6.10452 21.7838C6.64469 22.5408 7.32257 23.0964 8.12748 23.4234H2.40008C1.94592 22.9414 1.55318 22.3936 1.22435 21.7838H6.10452Z"></path>
-          <path d="M15.9753 21.7838C15.6457 22.3936 15.2602 22.9415 14.8213 23.4234H11.8608C12.7015 23.0973 13.4264 22.543 14.0227 21.7838H15.9753Z"></path>
-          <path d="M23.2016 21.7838C23.3205 22.5267 23.6272 23.0906 24.0875 23.4234H19.4507C19.2008 22.9377 19.0348 22.3887 18.9611 21.7838H23.2016Z"></path>
-          <path d="M29.6415 21.7838C29.3929 22.3649 29.0672 22.9198 28.6798 23.4234H26.2913C26.809 23.0921 27.2884 22.5303 27.6965 21.7838H29.6415Z"></path>
-          <path d="M34.7756 21.7838C35.1876 22.498 35.7076 23.0447 36.3327 23.4234H31.8901C31.3725 22.9406 30.9182 22.3925 30.5327 21.7838H34.7756Z"></path>
-          <path d="M47.1403 21.7838C46.7548 22.3925 46.3005 22.9406 45.7829 23.4234H41.3477C41.9765 23.0447 42.5011 22.4979 42.9178 21.7838H47.1403Z"></path>
-          <path d="M4.97293 19.2072C5.1237 19.8073 5.31836 20.3552 5.55486 20.8468H0.788749C0.585257 20.3346 0.420002 19.7875 0.293988 19.2072H4.97293Z"></path>
-          <path d="M16.9458 19.2072C16.8042 19.7876 16.6278 20.3347 16.4179 20.8468H14.6376C14.9063 20.3562 15.1356 19.8083 15.3244 19.2072H16.9458Z"></path>
-          <path d="M23.146 20.8468H18.9172V19.2072H23.146V20.8468Z"></path>
-          <path d="M33.879 19.2072C33.9937 19.8097 34.1454 20.3562 34.3337 20.8468H30.0171C30.0067 20.8251 29.9961 20.8035 29.9859 20.7817C29.9802 20.8034 29.9741 20.8251 29.9682 20.8468H28.1326C28.3289 20.3505 28.4984 19.8012 28.6354 19.2072H33.879Z"></path>
-          <path d="M48.2582 19.2072C48.1017 19.7867 47.8998 20.3339 47.6561 20.8468H43.3651C43.5558 20.3562 43.71 19.8097 43.8264 19.2072H48.2582Z"></path>
-          <path d="M4.61127 16.6306C4.63883 17.207 4.69545 17.7543 4.78 18.2703H0.128844C0.056725 17.7466 0.0134713 17.1997 0 16.6306H4.61127Z"></path>
-          <path d="M17.2781 17.2464C17.2423 17.5969 17.1958 17.9383 17.1392 18.2703H15.5758C15.6704 17.8506 15.7479 17.4096 15.8073 16.9484L17.2781 17.2464Z"></path>
-          <path d="M23.146 18.2703H18.9172V16.6306H23.146V18.2703Z"></path>
-          <path d="M33.6225 16.6306C33.6374 17.2111 33.6755 17.7576 33.7361 18.2703H28.8183C28.902 17.7493 28.9618 17.2012 28.9946 16.6306H33.6225Z"></path>
-          <path d="M48.643 16.6306C48.6191 17.199 48.5595 17.7459 48.4664 18.2703H43.9719C44.0335 17.7576 44.072 17.211 44.0873 16.6306H48.643Z"></path>
-          <path d="M23.146 6.89115H28.9193V8.56739H23.146V15.6937H18.9172V8.56739H15.8592L16.4324 14.49L14.9983 14.6762C14.0055 9.75933 13.1963 8.00865 9.8132 7.85966C6.45181 7.85968 4.61542 10.5441 4.592 15.6937H0.00268892C0.175472 9.48821 3.32011 6.14613 8.93079 6.14613C9.77653 6.14614 10.7326 6.25781 11.8725 6.51853C13.152 6.78855 14.2702 6.89115 15.697 6.89115C19.7286 6.89112 21.3074 4.20914 22.0796 0H23.146V6.89115Z"></path>
-          <path d="M38.8367 6.14613C44.6383 6.14616 48.4971 9.86614 48.6497 15.6937H44.092C44.0101 10.6034 42.1785 7.97132 38.8367 7.97128C35.5308 7.97128 33.6998 10.6034 33.618 15.6937H29.0235C29.1761 9.86611 33.0351 6.14613 38.8367 6.14613Z"></path>
-          <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M58.5142 19.14C59.5559 19.14 60.9024 19.5091 60.9532 22.5701H58.3236C57.7138 22.5701 57.3201 22.734 57.3709 23.3763C57.5233 25.2074 57.9934 25.385 58.6413 25.385C59.3145 25.385 59.937 25.18 60.2545 23.9229C60.28 23.8546 60.4706 23.8545 60.5468 23.8545C60.6103 23.8545 60.8389 23.8546 60.8135 23.9229C60.4197 25.6993 59.6702 26 58.6413 26C57.5996 26 55.9862 25.631 55.9862 22.5701C55.9862 19.4954 57.536 19.14 58.5142 19.14ZM58.5142 19.5773C57.9044 19.5773 57.4217 19.9736 57.3455 22.0917H59.5813C59.5051 19.9737 59.1367 19.5773 58.5142 19.5773Z"
-          ></path>
-          <path d="M63.258 19.2631C63.3215 19.2631 63.3342 19.4543 63.3342 19.509C63.3342 19.55 63.3216 19.7276 63.258 19.7276C62.6737 19.7276 62.7118 20.083 62.8262 20.5066C62.9913 21.1899 63.5121 22.9663 63.6137 23.4309C63.6391 23.5676 63.7662 23.5539 63.817 23.4309L65.0238 20.1786C65.0365 20.124 65.1763 20.124 65.2525 20.124C65.3287 20.124 65.4685 20.124 65.4939 20.1786L66.6625 23.4309C66.7006 23.5539 66.8404 23.5539 66.8658 23.4309L67.6661 20.5203C67.7931 20.083 67.8186 19.7276 67.2342 19.7276C67.1834 19.7276 67.1707 19.5773 67.1707 19.509C67.1707 19.427 67.1834 19.2631 67.2342 19.2631H68.9238C68.9746 19.2631 69 19.427 69 19.509C69 19.5773 68.9746 19.7276 68.9238 19.7276C68.3903 19.7276 68.2378 20.1239 68.1235 20.5339C67.9965 20.9438 66.5613 25.8484 66.5482 25.9043C66.5228 25.959 66.4339 25.959 66.3704 25.959C66.3069 25.959 66.2179 25.9317 66.2052 25.9043C66.1036 25.426 65.0619 22.6247 64.9222 22.1054C64.9095 21.9824 64.7443 21.9824 64.7062 22.1191C64.6554 22.2286 63.3347 25.8485 63.3216 25.9043C63.3089 25.959 63.2326 25.959 63.1564 25.959C63.0802 25.959 63.004 25.959 62.9786 25.9043L61.4033 20.5339C61.2763 20.0693 61.1111 19.7276 60.5649 19.7276C60.5268 19.7276 60.5014 19.591 60.5014 19.509C60.5014 19.4133 60.5268 19.2631 60.5649 19.2631H63.258Z"></path>
-          <path d="M53.2441 19.1264C54.0064 19.1264 55.2766 19.3724 55.2766 21.2718V24.5105C55.2766 24.9204 55.3275 25.3167 55.8991 25.3167C55.9499 25.3167 55.9627 25.4807 55.9627 25.549C55.9627 25.631 55.9499 25.795 55.8991 25.795H53.2823C53.2441 25.795 53.2187 25.6584 53.2187 25.5627C53.2187 25.4671 53.2314 25.3167 53.2823 25.3167C53.8666 25.3167 53.892 24.9204 53.892 24.5105V21.5178C53.892 19.9053 53.4347 19.8507 53.0536 19.8507C52.4184 19.8507 52.2024 20.3699 52.0119 20.7525V24.5105C52.0119 24.9341 52.0627 25.3167 52.6598 25.3167C52.7106 25.3167 52.7233 25.508 52.7233 25.549C52.7233 25.6037 52.6979 25.795 52.6598 25.795H49.8777C49.8269 25.795 49.8015 25.6583 49.8015 25.549C49.8015 25.4671 49.8269 25.3168 49.8777 25.3167C50.6526 25.3167 50.7034 24.9068 50.7034 24.5105V20.5476C50.7034 20.0693 50.5764 19.7413 49.8777 19.7413C49.8269 19.7413 49.8015 19.6047 49.8015 19.4954C49.8015 19.3861 49.8269 19.2631 49.8777 19.2631H51.6308C51.8213 19.2631 51.9611 19.3314 51.9992 19.673C52.0119 19.7687 52.0754 19.796 52.1389 19.7276C52.3422 19.4817 52.6598 19.1264 53.2441 19.1264Z"></path>
-          <path d="M48.0394 25.9621H46.8V24.629H48.0394V25.9621Z"></path>
-        </svg>
-        <div className="flex flex-col items-center text-center">
-          <h1 className="max-w-xs text-2xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            Ready for your first task
-          </h1>
+  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard' | 'assign-task' | 'tasks'>('login');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<'today' | 'tomorrow'>('today');
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
+  const [activeNav, setActiveNav] = useState('dashboard');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  
+  // Form states
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerRole, setRegisterRole] = useState<'manager' | 'employee'>('employee');
+
+  // Task assignment states
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskProject, setTaskProject] = useState('');
+  const [taskPriority, setTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [taskAssignee, setTaskAssignee] = useState('');
+
+  // All tasks state
+  const [allTasks, setAllTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'BrightBridge',
+      description: 'Website Design',
+      project: 'BrightBridge',
+      status: 'in-progress',
+      priority: 'high',
+      assignedTo: '1',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-10'),
+      dueDate: new Date('2024-01-11')
+    },
+    {
+      id: '2',
+      title: 'Github',
+      description: 'Upload Dev Files & Images',
+      project: 'Github',
+      status: 'todo',
+      priority: 'medium',
+      assignedTo: '1',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-10'),
+      dueDate: new Date('2024-01-12')
+    },
+    {
+      id: '3',
+      title: 'API Development',
+      description: 'Build REST API endpoints',
+      project: 'Backend Service',
+      status: 'in-progress',
+      priority: 'high',
+      assignedTo: '2',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-09'),
+      dueDate: new Date('2024-01-15')
+    },
+    {
+      id: '4',
+      title: 'Database Migration',
+      description: 'Migrate to PostgreSQL',
+      project: 'Infrastructure',
+      status: 'completed',
+      priority: 'medium',
+      assignedTo: '3',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-05'),
+      dueDate: new Date('2024-01-10')
+    }
+  ]);
+
+  // Notifications state
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const handleLogin = () => {
+    const user = allUsers.find(u => u.email === loginEmail) || {
+      id: '1',
+      name: 'John Smith',
+      email: loginEmail,
+      role: loginEmail.includes('manager') ? 'manager' as const : 'employee' as const,
+      avatar: 'JS'
+    };
+    setCurrentUser(user);
+    setCurrentView('dashboard');
+  };
+
+  const handleRegister = () => {
+    setCurrentUser({
+      id: Date.now().toString(),
+      name: registerName,
+      email: registerEmail,
+      role: registerRole,
+      avatar: registerName.split(' ').map(n => n[0]).join('').toUpperCase()
+    });
+    setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentView('login');
+    setActiveNav('dashboard');
+    setNotifications([]);
+  };
+
+  const handleAssignTask = () => {
+    if (!taskTitle || !taskDescription || !taskProject || !taskAssignee) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: taskProject,
+      description: taskTitle,
+      project: taskProject,
+      status: 'todo',
+      priority: taskPriority,
+      assignedTo: taskAssignee,
+      assignedBy: currentUser?.id || '',
+      createdAt: new Date(),
+      dueDate: new Date(Date.now() + 86400000 * 7)
+    };
+
+    setAllTasks([...allTasks, newTask]);
+
+    // Create notification for the assignee if it's not self-assignment
+    if (taskAssignee !== currentUser?.id) {
+      const assignerName = currentUser?.name || 'Someone';
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        message: `${assignerName} assigned you a new task: "${taskTitle}"`,
+        taskId: newTask.id,
+        read: false,
+        timestamp: new Date()
+      };
+      setNotifications([newNotification, ...notifications]);
+    }
+
+    setTaskTitle('');
+    setTaskDescription('');
+    setTaskProject('');
+    setTaskPriority('medium');
+    setTaskAssignee('');
+    setCurrentView('dashboard');
+    alert('Task assigned successfully!');
+  };
+
+  const handleUpdateTaskStatus = (taskId: string, newStatus: 'todo' | 'in-progress' | 'completed') => {
+    const task = allTasks.find(t => t.id === taskId);
+    
+    // Create notification for manager when employee completes a task
+    if (task && newStatus === 'completed' && currentUser?.role === 'employee' && task.assignedBy !== currentUser.id) {
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        message: `${currentUser.name} completed the task: "${task.description}"`,
+        taskId: task.id,
+        read: false,
+        timestamp: new Date()
+      };
+      setNotifications([newNotification, ...notifications]);
+    }
+    
+    setAllTasks(allTasks.map(t => 
+      t.id === taskId ? { ...t, status: newStatus } : t
+    ));
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(notifications.map(notif =>
+      notif.id === notificationId ? { ...notif, read: true } : notif
+    ));
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+    setShowNotifications(false);
+  };
+
+  const handleNotificationClick = (notificationId: string) => {
+    markNotificationAsRead(notificationId);
+    setShowNotifications(false);
+    setCurrentView('tasks');
+    setActiveNav('tasks');
+  };
+
+  // Filter tasks based on user role
+  const getFilteredTasks = () => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'manager') {
+      return allTasks;
+    }
+    return allTasks.filter(task => task.assignedTo === currentUser.id);
+  };
+
+  // Filter notifications for current user
+  const getUserNotifications = () => {
+    if (!currentUser) return [];
+    
+    return notifications.filter(notif => {
+      const task = allTasks.find(t => t.id === notif.taskId);
+      if (!task) return false;
+      
+      // Employees see task assignment notifications
+      if (currentUser.role === 'employee') {
+        return task.assignedTo === currentUser.id;
+      }
+      
+      // Managers see completion notifications from their assigned tasks
+      if (currentUser.role === 'manager') {
+        return task.assignedBy === currentUser.id;
+      }
+      
+      return false;
+    });
+  };
+
+  const tasks = getFilteredTasks();
+  const userNotifications = getUserNotifications();
+  const unreadCount = userNotifications.filter(n => !n.read).length;
+
+  const meetings: Meeting[] = [
+    { id: '1', title: 'Design Review', time: '10:00 AM', platform: 'meet', projectName: 'BrightBridge' },
+    { id: '2', title: 'Sprint Planning', time: '2:00 PM', platform: 'zoom', projectName: 'Github' },
+    { id: '3', title: 'Client Call', time: '4:30 PM', platform: 'meet', projectName: 'Client Portal' }
+  ];
+
+  const tickets: Ticket[] = [
+    { id: '1', userName: 'Sarah Johnson', userAvatar: 'SJ', message: 'Need help with deployment issue...', timestamp: new Date() },
+    { id: '2', userName: 'Mike Wilson', userAvatar: 'MW', message: 'Question about API integration...', timestamp: new Date() }
+  ];
+
+  // Calculate stats based on filtered tasks
+  const getTaskStats = () => {
+    const totalTasks = tasks.length;
+    const todoTasks = tasks.filter(t => t.status === 'todo').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const highPriority = tasks.filter(t => t.priority === 'high').length;
+    const mediumPriority = tasks.filter(t => t.priority === 'medium').length;
+    const lowPriority = tasks.filter(t => t.priority === 'low').length;
+
+    return {
+      totalTasks,
+      todoTasks,
+      inProgressTasks,
+      completedTasks,
+      highPriority,
+      mediumPriority,
+      lowPriority
+    };
+  };
+
+  const stats = getTaskStats();
+
+  const projectsData = [
+    { name: 'In Progress', value: stats.inProgressTasks, color: '#FF9F43' },
+    { name: 'Completed', value: stats.completedTasks, color: '#5B8DEF' },
+    { name: 'Not Started', value: stats.todoTasks, color: '#E0E0E0' }
+  ].filter(item => item.value > 0);
+
+  const priorityData = [
+    { name: 'High', value: stats.highPriority, color: '#EF4444' },
+    { name: 'Medium', value: stats.mediumPriority, color: '#FF9F43' },
+    { name: 'Low', value: stats.lowPriority, color: '#22C55E' }
+  ].filter(item => item.value > 0);
+
+  const getTaskDistribution = () => {
+    if (currentUser?.role !== 'manager') return [];
+    
+    return allUsers.map(user => ({
+      name: user.name,
+      tasks: allTasks.filter(t => t.assignedTo === user.id).length
+    })).filter(item => item.tasks > 0);
+  };
+
+  const incomeExpenseData = [
+    { month: 'Jan', income: 20000, expense: 12000 },
+    { month: 'Feb', income: 22000, expense: 13000 },
+    { month: 'Mar', income: 21000, expense: 12500 },
+    { month: 'Apr', income: 23000, expense: 13500 },
+    { month: 'May', income: 24000, expense: 13000 },
+    { month: 'Jun', income: 24500, expense: 13200 },
+    { month: 'Jul', income: 24600, expense: 13290 }
+  ];
+
+  const invoiceData = [
+    { label: 'Overdue', amount: 5420, percentage: 25, color: '#A855F7' },
+    { label: 'Not Paid', amount: 8730, percentage: 40, color: '#EF4444' },
+    { label: 'Paid', amount: 12890, percentage: 60, color: '#22C55E' }
+  ];
+
+  // Login Screen
+  if (currentView === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-3xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">panze studio</h1>
+              <p className="text-gray-600">Welcome back! Please login to your account.</p>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="manager@panze.studio or employee@panze.studio"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded" />
+                  <span className="text-gray-600">Remember me</span>
+                </label>
+                <button className="text-blue-600 hover:text-blue-700 font-medium">Forgot Password?</button>
+              </div>
+              
+              <button
+                onClick={handleLogin}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
+              >
+                Sign In
+              </button>
+              
+              <div className="text-center text-gray-600">
+                Don&apos;t have an account?{' '}
+                <button
+                  onClick={() => setCurrentView('register')}
+                  className="text-blue-600 hover:text-blue-700 font-semibold"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>Demo accounts:</p>
+            <p>Manager: manager@panze.studio | Employee: sarah@panze.studio</p>
+          </div>
         </div>
-      </main>
+      </div>
+    );
+  }
+
+  // Registration Screen
+  if (currentView === 'register') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-3xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">panze studio</h1>
+              <p className="text-gray-600">Create your account to get started.</p>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  placeholder="John Smith"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  placeholder="Create a strong password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Account Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setRegisterRole('employee')}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                      registerRole === 'employee'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    Employee
+                  </button>
+                  <button
+                    onClick={() => setRegisterRole('manager')}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                      registerRole === 'manager'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    Manager
+                  </button>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleRegister}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
+              >
+                Create Account
+              </button>
+              
+              <div className="text-center text-gray-600">
+                Already have an account?{' '}
+                <button
+                  onClick={() => setCurrentView('login')}
+                  className="text-purple-600 hover:text-purple-700 font-semibold"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Common Sidebar Component
+  const renderSidebar = () => (
+    <aside className="w-20 bg-white border-r border-gray-200 min-h-screen p-4">
+      <nav className="space-y-4">
+        {[
+          { id: 'dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+          { id: 'tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+          { id: 'calendar', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+          { id: 'files', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+          { id: 'messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
+          { id: 'settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }
+        ].map(item => (
+          <button
+            key={item.id}
+            onClick={() => handleNavClick(item.id)}
+            className={`w-full p-3 rounded-2xl transition-all ${
+              activeNav === item.id
+                ? 'bg-gray-900 text-white shadow-lg'
+                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+            }`}
+          >
+            <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+            </svg>
+          </button>
+        ))}
+        
+        <button
+          onClick={handleLogout}
+          className="w-full p-3 rounded-2xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all mt-8"
+        >
+          <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </nav>
+    </aside>
+  );
+
+  // Common Header Component
+  const renderHeader = () => (
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="px-8 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <h1 className="text-2xl font-bold text-gray-900">panze studio</h1>
+          </div>
+          
+          <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
+            <button
+              onClick={() => setSelectedPeriod('today')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedPeriod === 'today'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setSelectedPeriod('week')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedPeriod === 'week'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              This Week
+            </button>
+            <button
+              onClick={() => setSelectedPeriod('month')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedPeriod === 'month'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              This Month
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search Task, Meeting, Projects…"
+                className="w-80 pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllNotificationsAsRead}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {userNotifications.length === 0 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        No notifications
+                      </div>
+                    ) : (
+                      userNotifications.map(notif => (
+                        <div
+                          key={notif.id}
+                          onClick={() => handleNotificationClick(notif.id)}
+                          className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                            !notif.read ? 'bg-blue-50' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${!notif.read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                            <div className="flex-1">
+                              <p className={`text-sm ${!notif.read ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                                {notif.message}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {notif.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
+              <div className="text-right">
+                <div className="text-sm font-semibold text-gray-900">{currentUser?.name}</div>
+                <div className="text-xs text-gray-500 capitalize">{currentUser?.role}</div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow-lg">
+                {currentUser?.avatar}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
+  // Task Assignment Screen
+  if (currentView === 'assign-task') {
+    return (
+      <div className="min-h-screen bg-[#F7F9FB]">
+        {renderHeader()}
+        <div className="flex">
+          {renderSidebar()}
+          <main className="flex-1 p-8">
+            <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Assign New Task</h2>
+            <p className="text-gray-600 mb-8">
+              {currentUser?.role === 'manager' 
+                ? 'Assign tasks to team members or yourself' 
+                : 'Assign a task to yourself'}
+            </p>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Task Title</label>
+                <input
+                  type="text"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="e.g., Complete project proposal"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  placeholder="Describe the task in detail..."
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name</label>
+                <input
+                  type="text"
+                  value={taskProject}
+                  onChange={(e) => setTaskProject(e.target.value)}
+                  placeholder="e.g., Website Redesign"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={taskPriority}
+                    onChange={(e) => setTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Assign To</label>
+                  <select
+                    value={taskAssignee}
+                    onChange={(e) => setTaskAssignee(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select assignee...</option>
+                    <option value={currentUser?.id}>Myself</option>
+                    {currentUser?.role === 'manager' && allUsers.filter(u => u.id !== currentUser?.id).map(user => (
+                      <option key={user.id} value={user.id}>{user.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={handleAssignTask}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
+                >
+                  Assign Task
+                </button>
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="px-8 py-3 border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Drag and drop handlers
+  const handleDragStart = (taskId: string) => {
+    setDraggedTask(taskId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (newStatus: 'todo' | 'in-progress' | 'completed') => {
+    if (draggedTask) {
+      handleUpdateTaskStatus(draggedTask, newStatus);
+      setDraggedTask(null);
+    }
+  };
+
+  // All Tasks View - Kanban Board
+  if (currentView === 'tasks') {
+    const todoTasks = tasks.filter(t => t.status === 'todo');
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
+    const completedTasks = tasks.filter(t => t.status === 'completed');
+
+    return (
+      <div className="min-h-screen bg-[#F7F9FB]">
+        {renderHeader()}
+        <div className="flex">
+          {renderSidebar()}
+          <main className="flex-1 p-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {currentUser?.role === 'manager' ? 'All Team Tasks' : 'My Tasks'}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {currentUser?.role === 'manager' 
+                  ? `Managing ${tasks.length} tasks across the team` 
+                  : `You have ${tasks.length} tasks assigned`}
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentView('assign-task')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Assign New Task
+            </button>
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-lg">No tasks assigned yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {/* To Do Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('todo')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-gray-200 min-h-[600px] transition-all hover:border-gray-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                    To Do
+                  </h3>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold">
+                    {todoTasks.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {todoTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            {task.project.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* In Progress Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('in-progress')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-orange-200 min-h-[600px] transition-all hover:border-orange-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+                    In Progress
+                  </h3>
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold">
+                    {inProgressTasks.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {inProgressTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            {task.project.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Completed Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('completed')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-green-200 min-h-[600px] transition-all hover:border-green-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    Completed
+                  </h3>
+                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                    {completedTasks.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {completedTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-green-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105 opacity-75"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1 line-through">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard (existing code continues...)
+  // Navigation handler
+  const handleNavClick = (navId: string) => {
+    setActiveNav(navId);
+    if (navId === 'tasks') {
+      setCurrentView('tasks');
+    } else if (navId === 'dashboard') {
+      setCurrentView('dashboard');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F7F9FB]">
+      {renderHeader()}
+      <div className="flex">
+        {renderSidebar()}
+        <main className="flex-1 p-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {currentUser?.role === 'manager' ? 'Manager Dashboard' : 'My Dashboard'}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {currentUser?.role === 'manager' 
+                  ? 'Manage and track all team projects' 
+                  : 'Track your assigned tasks and progress'}
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentView('assign-task')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Assign Task
+            </button>
+          </div>
+
+          {/* Dashboard content grid with charts - keeping the existing layout */}
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-3">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {currentUser?.role === 'manager' ? 'All Tasks' : 'My Tasks'}
+                  </h3>
+                  <button
+                    onClick={() => setCurrentView('tasks')}
+                    className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setActiveTab('today')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === 'today'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('tomorrow')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === 'tomorrow'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Tomorrow
+                  </button>
+                </div>
+
+                <select className="w-full mb-4 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option>On Going Tasks</option>
+                  <option>Completed Tasks</option>
+                  <option>All Tasks</option>
+                </select>
+
+                <div className="space-y-3">
+                  {tasks.slice(0, 4).map(task => (
+                    <div key={task.id} className={`p-4 rounded-xl border ${
+                      task.status === 'in-progress' 
+                        ? 'bg-blue-50 border-blue-100' 
+                        : task.status === 'completed'
+                        ? 'bg-green-50 border-green-100'
+                        : 'bg-gray-50 border-gray-100'
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-700">
+                          {task.project.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1">{task.title}</h4>
+                          <p className="text-xs text-gray-600">{task.description}</p>
+                          {currentUser?.role === 'manager' && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Assigned to: {allUsers.find(u => u.id === task.assignedTo)?.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Center Column - Charts */}
+            <div className="col-span-6 space-y-6">
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-blue-600">{stats.totalTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">Total Tasks</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-yellow-600">{stats.todoTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">To Do</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-orange-600">{stats.inProgressTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">In Progress</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-green-600">{stats.completedTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">Completed</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Task Status</h3>
+                  {projectsData.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={projectsData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {projectsData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="space-y-2 mt-4">
+                        {projectsData.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                              <span className="text-gray-600">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">No tasks yet</div>
+                  )}
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Priority Distribution</h3>
+                  {priorityData.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={priorityData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {priorityData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="space-y-2 mt-4">
+                        {priorityData.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                              <span className="text-gray-600">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">No tasks yet</div>
+                  )}
+                </div>
+              </div>
+
+              {currentUser?.role === 'manager' ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Task Distribution by Team Member</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={getTaskDistribution()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="name" stroke="#999" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#999" style={{ fontSize: '12px' }} />
+                      <Tooltip />
+                      <Bar dataKey="tasks" fill="#5B8DEF" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Income vs Expense</h3>
+                  <div className="flex gap-4 mb-4">
+                    <div>
+                      <div className="text-xs text-gray-600">Income</div>
+                      <div className="text-xl font-bold text-blue-600">$24,600</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600">Expense</div>
+                      <div className="text-xl font-bold text-orange-600">$13,290</div>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={incomeExpenseData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" stroke="#999" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#999" style={{ fontSize: '12px' }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="income" stroke="#5B8DEF" strokeWidth={2} dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="expense" stroke="#FF9F43" strokeWidth={2} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Invoice Overview</h3>
+                <div className="space-y-4">
+                  {invoiceData.map((item, index) => (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                        <span className="text-sm font-bold text-gray-900">${item.amount.toLocaleString()}</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-span-3 space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">My Meetings</h3>
+                  <button className="text-blue-600 text-sm font-medium hover:text-blue-700">See All</button>
+                </div>
+                <div className="space-y-3">
+                  {meetings.map(meeting => (
+                    <div key={meeting.id} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-gray-900">{meeting.title}</span>
+                        <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                          meeting.platform === 'meet' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {meeting.platform === 'meet' ? 'M' : 'Z'}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600">{meeting.projectName}</div>
+                      <div className="text-xs text-gray-500 mt-1">{meeting.time}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Open Tickets</h3>
+                <div className="space-y-4">
+                  {tickets.map(ticket => (
+                    <div key={ticket.id} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                          {ticket.userAvatar}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm text-gray-900">{ticket.userName}</div>
+                          <p className="text-xs text-gray-600 mt-1">{ticket.message}</p>
+                        </div>
+                      </div>
+                      <button className="w-full py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                        Check
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
