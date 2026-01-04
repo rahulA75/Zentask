@@ -62,6 +62,7 @@ export default function Home() {
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
   const [activeNav, setActiveNav] = useState('dashboard');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<string | null>(null);
   
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -592,8 +593,28 @@ export default function Home() {
     );
   }
 
-  // All Tasks View
+  // Drag and drop handlers
+  const handleDragStart = (taskId: string) => {
+    setDraggedTask(taskId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (newStatus: 'todo' | 'in-progress' | 'completed') => {
+    if (draggedTask) {
+      handleUpdateTaskStatus(draggedTask, newStatus);
+      setDraggedTask(null);
+    }
+  };
+
+  // All Tasks View - Kanban Board
   if (currentView === 'tasks') {
+    const todoTasks = tasks.filter(t => t.status === 'todo');
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
+    const completedTasks = tasks.filter(t => t.status === 'completed');
+
     return (
       <div className="min-h-screen bg-[#F7F9FB]">
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -646,81 +667,191 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.length === 0 ? (
-              <div className="col-span-3 text-center py-16">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <p className="text-gray-500 text-lg">No tasks assigned yet.</p>
+          {tasks.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-            ) : (
-              tasks.map(task => (
-                <div
-                  key={task.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg">
-                        {task.project.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
-                        <p className="text-xs text-gray-500">{task.project}</p>
-                      </div>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      task.priority === 'high' 
-                        ? 'bg-red-100 text-red-700' 
-                        : task.priority === 'medium' 
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-green-100 text-green-700'
-                    }`}>
-                      {task.priority.toUpperCase()}
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm mb-4">{task.description}</p>
-
-                  <div className="mb-4">
-                    <label className="block text-xs font-semibold text-gray-600 mb-2">Status</label>
-                    <select
-                      value={task.status}
-                      onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as 'todo' | 'in-progress' | 'completed')}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="todo">To Do</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    {currentUser?.role === 'manager' && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
-                          {allUsers.find(u => u.id === task.assignedTo)?.avatar}
-                        </div>
-                        <span className="text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
-                      </div>
-                    )}
-                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      task.status === 'completed'
-                        ? 'bg-green-100 text-green-700'
-                        : task.status === 'in-progress'
-                        ? 'bg-orange-100 text-orange-700'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {task.status === 'in-progress' ? 'IN PROGRESS' : task.status.toUpperCase()}
-                    </div>
-                  </div>
+              <p className="text-gray-500 text-lg">No tasks assigned yet.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {/* To Do Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('todo')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-gray-200 min-h-[600px] transition-all hover:border-gray-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                    To Do
+                  </h3>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold">
+                    {todoTasks.length}
+                  </span>
                 </div>
-              ))
-            )}
-          </div>
+                <div className="space-y-4">
+                  {todoTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            {task.project.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* In Progress Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('in-progress')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-orange-200 min-h-[600px] transition-all hover:border-orange-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+                    In Progress
+                  </h3>
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-semibold">
+                    {inProgressTasks.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {inProgressTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-orange-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            {task.project.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Completed Column */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop('completed')}
+                className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-dashed border-green-200 min-h-[600px] transition-all hover:border-green-300"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    Completed
+                  </h3>
+                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                    {completedTasks.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {completedTasks.map(task => (
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task.id)}
+                      className="bg-white rounded-xl shadow-sm border border-green-100 p-4 cursor-move hover:shadow-lg transition-all duration-200 hover:scale-105 opacity-75"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-gray-900 text-sm mb-1 line-through">{task.title}</h4>
+                            <p className="text-xs text-gray-500">{task.project}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          task.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : task.priority === 'medium' 
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority.toUpperCase()}
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+                      {currentUser?.role === 'manager' && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                            {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                          </div>
+                          <span className="text-xs text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );
