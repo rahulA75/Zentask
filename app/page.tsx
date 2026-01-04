@@ -1,599 +1,637 @@
 'use client';
 
 import { useState } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'manager' | 'employee';
+  avatar: string;
+}
 
 interface Task {
   id: string;
   title: string;
   description: string;
-  assignedTo: string;
-  assignedBy: string;
-  status: 'pending' | 'in-progress' | 'completed';
+  project: string;
+  status: 'todo' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
+  assignedTo: string;
   createdAt: Date;
+  dueDate: Date;
 }
 
-interface User {
+interface Meeting {
   id: string;
-  name: string;
-  role: 'manager' | 'employee';
+  title: string;
+  time: string;
+  platform: 'meet' | 'zoom';
+  projectName: string;
+}
+
+interface Ticket {
+  id: string;
+  userName: string;
+  userAvatar: string;
+  message: string;
+  timestamp: Date;
 }
 
 export default function Home() {
-  const [currentUser] = useState<User>({
-    id: 'manager1',
-    name: 'Manager User',
-    role: 'manager',
-  });
+  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<'today' | 'tomorrow'>('today');
+  const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
+  const [activeNav, setActiveNav] = useState('dashboard');
+  
+  // Form states
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerRole, setRegisterRole] = useState<'manager' | 'employee'>('employee');
 
-  const [employees] = useState<User[]>([
-    { id: 'emp1', name: 'John Doe', role: 'employee' },
-    { id: 'emp2', name: 'Jane Smith', role: 'employee' },
-    { id: 'emp3', name: 'Mike Johnson', role: 'employee' },
-  ]);
+  const handleLogin = () => {
+    setCurrentUser({
+      id: '1',
+      name: 'John Smith',
+      email: loginEmail,
+      role: loginEmail.includes('manager') ? 'manager' : 'employee',
+      avatar: 'JS'
+    });
+    setCurrentView('dashboard');
+  };
 
-  const [tasks, setTasks] = useState<Task[]>([
+  const handleRegister = () => {
+    setCurrentUser({
+      id: '2',
+      name: registerName,
+      email: registerEmail,
+      role: registerRole,
+      avatar: registerName.split(' ').map(n => n[0]).join('').toUpperCase()
+    });
+    setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentView('login');
+  };
+
+  // Sample data
+  const tasks: Task[] = [
     {
       id: '1',
-      title: 'Complete Project Report',
-      description: 'Finish the quarterly project report',
-      assignedTo: 'emp1',
-      assignedBy: 'manager1',
+      title: 'BrightBridge',
+      description: 'Website Design',
+      project: 'BrightBridge',
       status: 'in-progress',
       priority: 'high',
-      createdAt: new Date('2024-01-01'),
+      assignedTo: '1',
+      createdAt: new Date('2024-01-10'),
+      dueDate: new Date('2024-01-11')
     },
     {
       id: '2',
-      title: 'Review Code Changes',
-      description: 'Review and approve pull requests',
-      assignedTo: 'manager1',
-      assignedBy: 'manager1',
-      status: 'pending',
+      title: 'Github',
+      description: 'Upload Dev Files & Images',
+      project: 'Github',
+      status: 'todo',
       priority: 'medium',
-      createdAt: new Date('2024-01-02'),
-    },
-    {
-      id: '3',
-      title: 'Update Documentation',
-      description: 'Update API documentation with new endpoints',
-      assignedTo: 'emp2',
-      assignedBy: 'manager1',
-      status: 'completed',
-      priority: 'low',
-      createdAt: new Date('2024-01-03'),
-    },
-    {
-      id: '4',
-      title: 'Team Meeting Preparation',
-      description: 'Prepare slides for weekly team meeting',
-      assignedTo: 'manager1',
-      assignedBy: 'manager1',
-      status: 'in-progress',
-      priority: 'high',
-      createdAt: new Date('2024-01-04'),
-    },
-  ]);
-
-  const [activeView, setActiveView] = useState<'assign' | 'report'>('assign');
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDescription, setTaskDescription] = useState('');
-  const [selectedAssignee, setSelectedAssignee] = useState('');
-  const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high'>('medium');
-
-  const handleAssignTask = () => {
-    if (!taskTitle || !taskDescription || !selectedAssignee) {
-      alert('Please fill in all fields');
-      return;
+      assignedTo: '1',
+      createdAt: new Date('2024-01-10'),
+      dueDate: new Date('2024-01-12')
     }
+  ];
 
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: taskTitle,
-      description: taskDescription,
-      assignedTo: selectedAssignee,
-      assignedBy: currentUser.id,
-      status: 'pending',
-      priority: selectedPriority,
-      createdAt: new Date(),
-    };
+  const meetings: Meeting[] = [
+    { id: '1', title: 'Design Review', time: '10:00 AM', platform: 'meet', projectName: 'BrightBridge' },
+    { id: '2', title: 'Sprint Planning', time: '2:00 PM', platform: 'zoom', projectName: 'Github' },
+    { id: '3', title: 'Client Call', time: '4:30 PM', platform: 'meet', projectName: 'Client Portal' }
+  ];
 
-    setTasks([...tasks, newTask]);
-    setTaskTitle('');
-    setTaskDescription('');
-    setSelectedAssignee('');
-    setSelectedPriority('medium');
-    alert('Task assigned successfully!');
-  };
+  const tickets: Ticket[] = [
+    { id: '1', userName: 'Sarah Johnson', userAvatar: 'SJ', message: 'Need help with deployment issue...', timestamp: new Date() },
+    { id: '2', userName: 'Mike Wilson', userAvatar: 'MW', message: 'Question about API integration...', timestamp: new Date() }
+  ];
 
-  const getAssigneeName = (userId: string) => {
-    if (userId === currentUser.id) return currentUser.name;
-    const employee = employees.find(emp => emp.id === userId);
-    return employee ? employee.name : 'Unknown';
-  };
+  const projectsData = [
+    { name: 'In Progress', value: 14, color: '#FF9F43' },
+    { name: 'Completed', value: 32, color: '#5B8DEF' },
+    { name: 'Not Started', value: 54, color: '#E0E0E0' }
+  ];
 
-  const getTaskStats = () => {
-    const totalTasks = tasks.length;
-    const pendingTasks = tasks.filter(t => t.status === 'pending').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const selfAssignedTasks = tasks.filter(t => t.assignedTo === currentUser.id).length;
-    
-    return {
-      totalTasks,
-      pendingTasks,
-      inProgressTasks,
-      completedTasks,
-      selfAssignedTasks,
-    };
-  };
+  const incomeExpenseData = [
+    { month: 'Jan', income: 20000, expense: 12000 },
+    { month: 'Feb', income: 22000, expense: 13000 },
+    { month: 'Mar', income: 21000, expense: 12500 },
+    { month: 'Apr', income: 23000, expense: 13500 },
+    { month: 'May', income: 24000, expense: 13000 },
+    { month: 'Jun', income: 24500, expense: 13200 },
+    { month: 'Jul', income: 24600, expense: 13290 }
+  ];
 
-  const stats = getTaskStats();
+  const invoiceData = [
+    { label: 'Overdue', amount: 5420, percentage: 25, color: '#A855F7' },
+    { label: 'Not Paid', amount: 8730, percentage: 40, color: '#EF4444' },
+    { label: 'Paid', amount: 12890, percentage: 60, color: '#22C55E' }
+  ];
 
-  const statusChartData = [
-    { name: 'Pending', value: stats.pendingTasks, color: '#EAB308' },
-    { name: 'In Progress', value: stats.inProgressTasks, color: '#F97316' },
-    { name: 'Completed', value: stats.completedTasks, color: '#22C55E' },
-  ].filter(item => item.value > 0);
-
-  const employeeTaskData = [
-    { name: currentUser.name, tasks: tasks.filter(t => t.assignedTo === currentUser.id).length },
-    ...employees.map(emp => ({
-      name: emp.name,
-      tasks: tasks.filter(t => t.assignedTo === emp.id).length
-    }))
-  ].filter(item => item.tasks > 0);
-
-  const priorityData = [
-    { name: 'High', value: tasks.filter(t => t.priority === 'high').length, color: '#EF4444' },
-    { name: 'Medium', value: tasks.filter(t => t.priority === 'medium').length, color: '#F59E0B' },
-    { name: 'Low', value: tasks.filter(t => t.priority === 'low').length, color: '#10B981' },
-  ].filter(item => item.value > 0);
-
-  const taskTrendData = tasks
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-    .reduce((acc: Array<{ date: string; tasks: number }>, task, index) => {
-      const dateStr = task.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const existing = acc.find(item => item.date === dateStr);
-      if (existing) {
-        existing.tasks += 1;
-      } else {
-        acc.push({ date: dateStr, tasks: index + 1 });
-      }
-      return acc;
-    }, []);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Modern Header with Glassmorphism */}
-        <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-8 mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                  Task Management System
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 flex items-center gap-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                    {currentUser.role.toUpperCase()}
-                  </span>
-                  Welcome, <span className="font-semibold">{currentUser.name}</span>
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <div className="text-center px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white shadow-lg">
-                  <div className="text-2xl font-bold">{stats.totalTasks}</div>
-                  <div className="text-xs opacity-90">Total Tasks</div>
-                </div>
-                <div className="text-center px-6 py-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl text-white shadow-lg">
-                  <div className="text-2xl font-bold">{stats.selfAssignedTasks}</div>
-                  <div className="text-xs opacity-90">My Tasks</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Modern Tab Navigation */}
-        <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-xl p-2 mb-8">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveView('assign')}
-              className={`flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform ${
-                activeView === 'assign'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Assign Task
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveView('report')}
-              className={`flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform ${
-                activeView === 'report'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg scale-105'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                View Report
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Assign Task View */}
-        {activeView === 'assign' && (
-          <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-8">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-                Assign New Task
-              </h2>
+  // Login Screen
+  if (currentView === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-3xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">panze studio</h1>
+              <p className="text-gray-600">Welcome back! Please login to your account.</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Task Title
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="manager@panze.studio or employee@panze.studio"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded" />
+                  <span className="text-gray-600">Remember me</span>
                 </label>
+                <button className="text-blue-600 hover:text-blue-700 font-medium">Forgot Password?</button>
+              </div>
+              
+              <button
+                onClick={handleLogin}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
+              >
+                Sign In
+              </button>
+              
+              <div className="text-center text-gray-600">
+                Don&apos;t have an account?{' '}
+                <button
+                  onClick={() => setCurrentView('register')}
+                  className="text-blue-600 hover:text-blue-700 font-semibold"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>Demo accounts:</p>
+            <p>Manager: manager@panze.studio | Employee: employee@panze.studio</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Registration Screen
+  if (currentView === 'register') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="backdrop-blur-xl bg-white/80 border border-white/20 rounded-3xl shadow-2xl p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">panze studio</h1>
+              <p className="text-gray-600">Create your account to get started.</p>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
                 <input
                   type="text"
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  className="w-full px-5 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white transition-all duration-200 placeholder:text-gray-400"
-                  placeholder="e.g., Complete project proposal"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  placeholder="John Smith"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 />
               </div>
-
+              
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Task Description
-                </label>
-                <textarea
-                  value={taskDescription}
-                  onChange={(e) => setTaskDescription(e.target.value)}
-                  className="w-full px-5 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white transition-all duration-200 placeholder:text-gray-400"
-                  placeholder="Describe the task in detail..."
-                  rows={4}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Assign To
-                  </label>
-                  <select
-                    value={selectedAssignee}
-                    onChange={(e) => setSelectedAssignee(e.target.value)}
-                    className="w-full px-5 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white transition-all duration-200"
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  placeholder="Create a strong password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Account Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setRegisterRole('employee')}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                      registerRole === 'employee'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    <option value="">Select assignee...</option>
-                    <option value={currentUser.id}>🎯 Myself ({currentUser.name})</option>
-                    <optgroup label="📋 Team Members">
-                      {employees.map(emp => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Priority Level
-                  </label>
-                  <select
-                    value={selectedPriority}
-                    onChange={(e) => setSelectedPriority(e.target.value as 'low' | 'medium' | 'high')}
-                    className="w-full px-5 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white transition-all duration-200"
+                    Employee
+                  </button>
+                  <button
+                    onClick={() => setRegisterRole('manager')}
+                    className={`px-4 py-3 rounded-xl border-2 transition-all ${
+                      registerRole === 'manager'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    <option value="low">🟢 Low Priority</option>
-                    <option value="medium">🟡 Medium Priority</option>
-                    <option value="high">🔴 High Priority</option>
-                  </select>
+                    Manager
+                  </button>
                 </div>
               </div>
-
+              
               <button
-                onClick={handleAssignTask}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-[1.02]"
+                onClick={handleRegister}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Assign Task
-                </div>
+                Create Account
+              </button>
+              
+              <div className="text-center text-gray-600">
+                Already have an account?{' '}
+                <button
+                  onClick={() => setCurrentView('login')}
+                  className="text-purple-600 hover:text-purple-700 font-semibold"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard
+  return (
+    <div className="min-h-screen bg-[#F7F9FB]">
+      {/* Top Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-8">
+              <h1 className="text-2xl font-bold text-gray-900">panze studio</h1>
+            </div>
+            
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
+              <button
+                onClick={() => setSelectedPeriod('today')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedPeriod === 'today'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setSelectedPeriod('week')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedPeriod === 'week'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                This Week
+              </button>
+              <button
+                onClick={() => setSelectedPeriod('month')}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedPeriod === 'month'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                This Month
               </button>
             </div>
+            
+            {/* Search and User */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search Task, Meeting, Projects…"
+                  className="w-80 pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
+              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              
+              <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-gray-900">{currentUser?.name}</div>
+                  <div className="text-xs text-gray-500 capitalize">{currentUser?.role}</div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow-lg">
+                  {currentUser?.avatar}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      </header>
 
-        {/* Report View */}
-        {activeView === 'report' && (
-          <div className="space-y-8">
-            {/* Enhanced Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-              <div className="backdrop-blur-xl bg-gradient-to-br from-blue-500 to-blue-600 border border-white/20 rounded-2xl shadow-2xl p-6 text-white transform transition-all duration-300 hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-20 bg-white border-r border-gray-200 min-h-screen p-4">
+          <nav className="space-y-4">
+            {[
+              { id: 'dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+              { id: 'tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+              { id: 'calendar', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+              { id: 'files', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+              { id: 'messages', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
+              { id: 'settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveNav(item.id)}
+                className={`w-full p-3 rounded-2xl transition-all ${
+                  activeNav === item.id
+                    ? 'bg-gray-900 text-white shadow-lg'
+                    : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                }`}
+              >
+                <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                </svg>
+              </button>
+            ))}
+            
+            <button
+              onClick={handleLogout}
+              className="w-full p-3 rounded-2xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all mt-8"
+            >
+              <svg className="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          {/* Page Title */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Project Dashboard</h2>
+            <p className="text-gray-600 mt-1">Manage and track your projects</p>
+          </div>
+
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Column - My Tasks */}
+            <div className="col-span-3">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">My Tasks</h3>
+                  <button className="text-gray-400 hover:text-gray-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                     </svg>
-                  </div>
+                  </button>
                 </div>
-                <div className="text-sm font-medium opacity-90 mb-2">Total Tasks</div>
-                <div className="text-4xl font-bold">{stats.totalTasks}</div>
-              </div>
 
-              <div className="backdrop-blur-xl bg-gradient-to-br from-yellow-500 to-yellow-600 border border-white/20 rounded-2xl shadow-2xl p-6 text-white transform transition-all duration-300 hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setActiveTab('today')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === 'today'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('tomorrow')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === 'tomorrow'
+                        ? 'bg-gray-900 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    Tomorrow
+                  </button>
                 </div>
-                <div className="text-sm font-medium opacity-90 mb-2">Pending</div>
-                <div className="text-4xl font-bold">{stats.pendingTasks}</div>
-              </div>
 
-              <div className="backdrop-blur-xl bg-gradient-to-br from-orange-500 to-orange-600 border border-white/20 rounded-2xl shadow-2xl p-6 text-white transform transition-all duration-300 hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-sm font-medium opacity-90 mb-2">In Progress</div>
-                <div className="text-4xl font-bold">{stats.inProgressTasks}</div>
-              </div>
+                <select className="w-full mb-4 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option>On Going Tasks</option>
+                  <option>Completed Tasks</option>
+                  <option>All Tasks</option>
+                </select>
 
-              <div className="backdrop-blur-xl bg-gradient-to-br from-green-500 to-green-600 border border-white/20 rounded-2xl shadow-2xl p-6 text-white transform transition-all duration-300 hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-sm font-medium opacity-90 mb-2">Completed</div>
-                <div className="text-4xl font-bold">{stats.completedTasks}</div>
-              </div>
-
-              <div className="backdrop-blur-xl bg-gradient-to-br from-purple-500 to-purple-600 border border-white/20 rounded-2xl shadow-2xl p-6 text-white transform transition-all duration-300 hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-sm font-medium opacity-90 mb-2">Self-Assigned</div>
-                <div className="text-4xl font-bold">{stats.selfAssignedTasks}</div>
-              </div>
-            </div>
-
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Task Status Distribution Chart */}
-              <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                    </svg>
-                  </div>
-                  Task Status Distribution
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={statusChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {statusChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Tasks by Team Member */}
-              <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-teal-500 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  Tasks by Team Member
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={employeeTaskData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="name" stroke="#6b7280" />
-                    <YAxis stroke="#6b7280" />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                    <Bar dataKey="tasks" fill="url(#colorGradient)" radius={[8, 8, 0, 0]} />
-                    <defs>
-                      <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                      </linearGradient>
-                    </defs>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Priority Distribution */}
-              <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  Priority Distribution
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={priorityData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {priorityData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Task Creation Trend */}
-              <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                    </svg>
-                  </div>
-                  Task Creation Trend
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={taskTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="date" stroke="#6b7280" />
-                    <YAxis stroke="#6b7280" />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
-                    <Line type="monotone" dataKey="tasks" stroke="#8B5CF6" strokeWidth={3} dot={{ fill: '#8B5CF6', r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* All Tasks List with Modern Design */}
-            <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-gray-700/50 rounded-2xl shadow-2xl p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
-                  All Tasks
-                </h2>
-              </div>
-
-              <div className="space-y-4">
-                {tasks.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                <div className="space-y-3">
+                  {tasks.map(task => (
+                    <div key={task.id} className={`p-4 rounded-xl border ${
+                      task.status === 'in-progress' 
+                        ? 'bg-blue-50 border-blue-100' 
+                        : 'bg-gray-50 border-gray-100'
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-xs font-bold text-gray-700">
+                          {task.project.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1">{task.title}</h4>
+                          <p className="text-xs text-gray-600">{task.description}</p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">
-                      No tasks assigned yet. Create your first task!
-                    </p>
-                  </div>
-                ) : (
-                  tasks.map(task => (
-                    <div
-                      key={task.id}
-                      className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-500 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                          {task.priority === 'high' && <span className="text-red-500">🔴</span>}
-                          {task.priority === 'medium' && <span className="text-yellow-500">🟡</span>}
-                          {task.priority === 'low' && <span className="text-green-500">🟢</span>}
-                          {task.title}
-                        </h3>
-                        <span
-                          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${
-                            task.status === 'pending'
-                              ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg'
-                              : task.status === 'in-progress'
-                              ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white shadow-lg'
-                              : 'bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg'
-                          }`}
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Center Column */}
+            <div className="col-span-6 space-y-6">
+              {/* Projects Overview & Income vs Expense */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* Projects Overview */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Projects Overview</h3>
+                  <div className="flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={projectsData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="value"
                         >
-                          {task.status}
-                        </span>
+                          {projectsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    {projectsData.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                          <span className="text-gray-600">{item.name}</span>
+                        </div>
+                        <span className="font-semibold text-gray-900">{item.value}</span>
                       </div>
-                      
-                      <p className="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-                        {task.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <span className="font-medium text-blue-700 dark:text-blue-300">
-                            {getAssigneeName(task.assignedTo)}
-                            {task.assignedTo === currentUser.id && (
-                              <span className="ml-1 px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full">Self</span>
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {task.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                          <span className="font-medium text-purple-700 dark:text-purple-300 capitalize">
-                            {task.priority} Priority
-                          </span>
-                        </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Income vs Expense */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Income vs Expense</h3>
+                  <div className="flex gap-4 mb-4">
+                    <div>
+                      <div className="text-xs text-gray-600">Income</div>
+                      <div className="text-xl font-bold text-blue-600">$24,600</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600">Expense</div>
+                      <div className="text-xl font-bold text-orange-600">$13,290</div>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={150}>
+                    <LineChart data={incomeExpenseData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" stroke="#999" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#999" style={{ fontSize: '12px' }} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="income" stroke="#5B8DEF" strokeWidth={2} dot={{ r: 4 }} />
+                      <Line type="monotone" dataKey="expense" stroke="#FF9F43" strokeWidth={2} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Invoice Overview */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Invoice Overview</h3>
+                <div className="space-y-4">
+                  {invoiceData.map((item, index) => (
+                    <div key={index}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                        <span className="text-sm font-bold text-gray-900">${item.amount.toLocaleString()}</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
+                        ></div>
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-span-3 space-y-6">
+              {/* My Meetings */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-bold text-gray-900">My Meetings</h3>
+                  <button className="text-blue-600 text-sm font-medium hover:text-blue-700">See All</button>
+                </div>
+                <div className="space-y-3">
+                  {meetings.map(meeting => (
+                    <div key={meeting.id} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-gray-900">{meeting.title}</span>
+                        <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                          meeting.platform === 'meet' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {meeting.platform === 'meet' ? 'M' : 'Z'}
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600">{meeting.projectName}</div>
+                      <div className="text-xs text-gray-500 mt-1">{meeting.time}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Open Tickets */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Open Tickets</h3>
+                <div className="space-y-4">
+                  {tickets.map(ticket => (
+                    <div key={ticket.id} className="pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                          {ticket.userAvatar}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm text-gray-900">{ticket.userName}</div>
+                          <p className="text-xs text-gray-600 mt-1">{ticket.message}</p>
+                        </div>
+                      </div>
+                      <button className="w-full py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                        Check
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </main>
       </div>
     </div>
   );

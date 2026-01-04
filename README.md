@@ -1,236 +1,314 @@
-# Task Management System
+# Panze Studio - Project Management Dashboard
 
-A comprehensive task management application built with Next.js 16, React 19, and TypeScript featuring a modern glassmorphism UI design where managers can assign tasks to employees and themselves, and view detailed reports with interactive charts.
+A modern SaaS project management dashboard with a clean, minimal aesthetic built with Next.js 16, React 19, and TypeScript. Features authentication, role-based access, and comprehensive project tracking tools.
 
-## ✨ Features
+## ✨ Key Features
 
-### 1. Modern UI Design
-- **Glassmorphism Effects**: Backdrop blur with transparency for a modern, layered appearance
-- **Gradient Accents**: Beautiful color gradients throughout the interface
-- **Smooth Animations**: Hover effects, transitions, and scale transforms
-- **Dark Mode Support**: Fully responsive dark mode theme
-- **Responsive Layout**: Optimized for all screen sizes (mobile, tablet, desktop)
-- **Icon Integration**: SVG icons for better visual communication
+### 🔐 Authentication System
+- **Login Screen**: Glassmorphism design with gradient backgrounds
+- **Registration Screen**: Role selection (Manager/Employee) during signup
+- **Role-Based Access**: Differentiate between manager and employee accounts
+- **Demo Accounts**:
+  - Manager: `manager@panze.studio`
+  - Employee: `employee@panze.studio`
 
-### 2. Task Assignment
-- **Assign to Employees**: Managers can assign tasks to any employee in their team
-- **Self-Assignment**: Managers can assign tasks to themselves with clear indicators
-- **Priority Levels**: 
-  - 🔴 High Priority
-  - 🟡 Medium Priority
-  - 🟢 Low Priority
-- **Task Details**: Each task includes:
-  - Title
-  - Description
-  - Assignee
-  - Priority level
-  - Status (Pending, In Progress, Completed)
-  - Creation date
+### 🎨 Modern SaaS UI Design
+- **Clean Minimal Aesthetic**: Off-white background (#F7F9FB)
+- **Glassmorphism**: Backdrop blur effects with transparency
+- **Soft Shadows**: Subtle elevation throughout
+- **Rounded Cards**: 16-20px border radius
+- **Premium Design**: Dribbble/Behance quality UI
+- **Professional Typography**: Similar to Inter/SF Pro/Poppins
+- **Responsive Layout**: Optimized for 1440px desktop width
 
-### 3. Advanced Report Dashboard
+### 📊 Dashboard Components
 
-#### Statistics Cards with Gradient Backgrounds
-- **Total Tasks**: Overall task count with blue gradient
-- **Pending Tasks**: Yellow gradient card
-- **In Progress Tasks**: Orange gradient card
-- **Completed Tasks**: Green gradient card
-- **Self-Assigned Tasks**: Purple gradient card for manager's own tasks
+#### Top Header
+- **Logo**: panze studio branding
+- **Filter Pills**: Today, This Week, This Month selectors
+- **Search Bar**: "Search Task, Meeting, Projects…"
+- **Notifications**: Bell icon with notification badge
+- **User Profile**: Avatar with name and role display
 
-#### Interactive Charts (Powered by Recharts)
-- **Task Status Distribution (Pie Chart)**
-  - Visual breakdown of task statuses
-  - Percentage labels for each segment
-  - Color-coded by status type
+#### Left Sidebar
+- **Icon Navigation**: Vertical pill-style icons
+- **Active State**: Dark background highlight
+- **Navigation Items**:
+  - Dashboard
+  - Tasks
+  - Calendar
+  - Files
+  - Messages
+  - Settings
+- **Logout Button**: Red hover state
 
-- **Tasks by Team Member (Bar Chart)**
-  - Shows task distribution across team members
-  - Gradient-filled bars
-  - Includes manager's self-assigned tasks
+#### Main Content Area
 
-- **Priority Distribution (Pie Chart)**
-  - Visualizes task priority breakdown
-  - High, Medium, and Low priority segments
-  - Color-coded by priority level
+**Left Column - My Tasks**
+- Today/Tomorrow tabs
+- Task status dropdown
+- Task cards with:
+  - Project icons
+  - Task titles
+  - Short descriptions
+  - Soft pastel backgrounds for active tasks
 
-- **Task Creation Trend (Line Chart)**
-  - Timeline of task creation
-  - Shows cumulative task growth
-  - Helps identify task creation patterns
+**Center Column - Analytics**
 
-#### Enhanced Task List
-- Visual priority indicators (colored emoji)
-- Gradient status badges
-- Glassmorphism card design
-- Hover effects for better interaction
-- Self-assigned task highlighting
-- Formatted date display
-- Priority level tags
+1. **Projects Overview (Donut Chart)**
+   - In Progress: 14 (Orange)
+   - Completed: 32 (Blue)
+   - Not Started: 54 (Gray)
+   - Minimal flat chart style
 
-## 🎨 Design Features
+2. **Income vs Expense (Line Chart)**
+   - Blue line: Income ($24,600)
+   - Orange line: Expense ($13,290)
+   - Monthly data from Jan to Jul
+   - Smooth curves with subtle grid lines
 
-- **Glassmorphism**: Frosted glass effect with backdrop blur
-- **Gradient Backgrounds**: Multi-color gradients throughout the UI
-- **Smooth Transitions**: All interactive elements have smooth animations
-- **Modern Typography**: Bold, gradient text for headings
-- **Card Hover Effects**: Cards scale and enhance shadows on hover
-- **Color Coding**: Consistent color scheme for task statuses and priorities
-- **Responsive Grid Layouts**: Adapts to different screen sizes
+3. **Invoice Overview (Progress Bars)**
+   - Overdue (Purple): $5,420
+   - Not Paid (Red): $8,730
+   - Paid (Green): $12,890
+   - Horizontal progress bars with percentages
+
+**Right Column - Engagement**
+
+1. **My Meetings**
+   - Meeting title
+   - Project name
+   - Time display
+   - Platform icons (Meet/Zoom)
+   - "See All Meetings" link
+
+2. **Open Tickets**
+   - User avatars
+   - User names
+   - Message previews
+   - "Check" action buttons
+
+### 🎯 Color Palette
+- **Primary Dark**: #1E1E1E (Charcoal)
+- **Accent Blue**: #5B8DEF
+- **Accent Orange**: #FF9F43
+- **Accent Purple**: #A855F7
+- **Accent Red**: #EF4444
+- **Accent Green**: #22C55E
+- **Background**: #F7F9FB (Off-white)
+- **Neutral Grays**: Various shades for hierarchy
 
 ## 🚀 Getting Started
 
-First, install dependencies:
+### Installation
 
 ```bash
 npm install
 ```
 
-Then, run the development server:
+### Development
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-## 📦 Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS 4
-- **Language**: TypeScript
-- **Charts**: Recharts 2.x
-- **Linting**: ESLint
-
-## 📁 Project Structure
-
-```
-/app
-  ├── page.tsx        # Main application component with task management logic
-  ├── layout.tsx      # Root layout
-  └── globals.css     # Global styles
-```
-
-## 🎯 Usage
-
-### Assigning a Task
-
-1. Navigate to the "Assign Task" view (default view)
-2. Fill in the task title and description
-3. Select an assignee from the dropdown:
-   - Choose "🎯 Myself" to assign the task to yourself
-   - Choose an employee name to assign to that employee
-4. Select priority level (Low, Medium, or High)
-5. Click "Assign Task" button
-
-### Viewing Reports
-
-1. Click the "View Report" button in the navigation
-2. View the enhanced statistics cards showing:
-   - Total number of tasks
-   - Tasks by status (Pending, In Progress, Completed)
-   - Number of self-assigned tasks
-3. Explore the interactive charts:
-   - Hover over chart elements to see detailed tooltips
-   - Analyze task distribution patterns
-   - Monitor team workload
-   - Track task creation trends
-4. Scroll down to see a detailed list of all tasks
-5. Self-assigned tasks are highlighted with a purple "Self" badge
-
-## 📊 Chart Features
-
-### Task Status Distribution
-- Pie chart showing percentage breakdown
-- Interactive tooltips
-- Color-coded segments
-
-### Tasks by Team Member
-- Bar chart with gradient fills
-- Shows workload distribution
-- Includes manager and all team members
-
-### Priority Distribution
-- Pie chart showing priority levels
-- Helps identify task urgency patterns
-- Red for high, amber for medium, green for low
-
-### Task Creation Trend
-- Line chart showing task creation over time
-- Cumulative view of tasks
-- Helps track project activity
-
-## 🔍 Features in Detail
-
-### Manager Capabilities
-- Create and assign tasks to team members
-- Assign tasks to themselves (self-assignment feature)
-- Track all tasks and their statuses
-- View comprehensive reports and statistics
-- Monitor team workload distribution
-- Analyze task priorities and trends
-
-### Task Status Types
-- **Pending**: Newly created tasks (Yellow badge)
-- **In Progress**: Tasks currently being worked on (Orange badge)
-- **Completed**: Finished tasks (Green badge)
-
-### Priority Levels
-- **High Priority**: Urgent tasks requiring immediate attention (🔴)
-- **Medium Priority**: Standard tasks (🟡)
-- **Low Priority**: Tasks that can be addressed later (🟢)
-
-### Self-Assignment Tracking
-The system specifically tracks and highlights tasks that managers assign to themselves:
-- Purple gradient badges in statistics
-- "Self" indicator on task cards
-- Dedicated self-assigned tasks counter
-- Visual highlighting in task lists
-
-## 🎨 UI Components
-
-- **Glassmorphism Cards**: Frosted glass effect with backdrop blur
-- **Gradient Buttons**: Smooth color transitions
-- **Icon-Enhanced Headers**: SVG icons for better visual hierarchy
-- **Responsive Charts**: Auto-sizing charts that work on all devices
-- **Animated Transitions**: Smooth hover and scale effects
-- **Status Badges**: Color-coded, gradient-filled status indicators
-
-## 🏗️ Build
-
-To create a production build:
+### Build for Production
 
 ```bash
 npm run build
 ```
 
-To start the production server:
+### Start Production Server
 
 ```bash
 npm start
 ```
 
-## 🧪 Linting
-
-To run ESLint:
+### Linting
 
 ```bash
 npm run lint
 ```
 
-## 📝 License
+## 📦 Tech Stack
 
-This project is for demonstration purposes.
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: React 19
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 4
+- **Charts**: Recharts 3.6.0
+- **Linting**: ESLint with Next.js config
+
+## 📱 Application Flow
+
+1. **Login/Register**: Users start at the authentication screen
+2. **Role Selection**: During registration, users choose Manager or Employee role
+3. **Dashboard Access**: After authentication, users see the main dashboard
+4. **Role-Based Features**: Dashboard adapts based on user role
+5. **Logout**: Users can logout from the sidebar
+
+## 🎨 Design Principles
+
+### Visual Hierarchy
+- **Bold headings** for section titles
+- **Medium weight** for labels and important text
+- **Light weight** for descriptions and secondary information
+
+### Spacing & Layout
+- Generous white space between elements
+- Consistent padding (24-32px for cards)
+- Clean grid system with proper alignment
+
+### Interactive Elements
+- Smooth transitions on hover states
+- Clear active states for selected items
+- Subtle shadows that elevate on interaction
+
+### Typography Scale
+- **Page Title**: 3xl (30px) - Bold
+- **Card Title**: lg (18px) - Bold
+- **Body Text**: sm (14px) - Medium
+- **Labels**: xs (12px) - Regular
+
+## 🔧 Customization
+
+### Adding New Dashboard Widgets
+
+1. Create your component in the main content area
+2. Follow the card styling pattern:
+```tsx
+<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+  {/* Your content */}
+</div>
+```
+
+### Modifying Color Scheme
+
+Update the color values in the component:
+- Primary colors: Update gradient classes
+- Chart colors: Modify the data arrays
+- Background: Change the `bg-[#F7F9FB]` class
+
+### Adding Navigation Items
+
+Add to the sidebar nav array:
+```tsx
+{ id: 'new-item', icon: 'SVG_PATH_DATA' }
+```
+
+## 📊 Data Structure
+
+### User Interface
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'manager' | 'employee';
+  avatar: string;
+}
+```
+
+### Task Interface
+```typescript
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  project: string;
+  status: 'todo' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  assignedTo: string;
+  createdAt: Date;
+  dueDate: Date;
+}
+```
+
+### Meeting Interface
+```typescript
+interface Meeting {
+  id: string;
+  title: string;
+  time: string;
+  platform: 'meet' | 'zoom';
+  projectName: string;
+}
+```
+
+## 🎯 Key Features Breakdown
+
+### Authentication
+- Glassmorphism login/register screens
+- Role selection during registration
+- Demo account support
+- Smooth transitions between views
+
+### Dashboard Layout
+- Fixed top header with search
+- Icon-only sidebar navigation
+- Three-column responsive grid
+- Sticky header for scroll persistence
+
+### Data Visualization
+- Donut charts for project overview
+- Line charts for financial tracking
+- Progress bars for invoice status
+- Clean, minimal chart styling
+
+### Task Management
+- Today/Tomorrow tab switching
+- Status filtering dropdown
+- Visual task cards with project icons
+- Active task highlighting
+
+### Meetings & Tickets
+- Meeting list with platform indicators
+- Ticket cards with user avatars
+- Action buttons for quick access
+- Clean, organized layout
+
+## 🚀 Performance
+
+- Server-side rendering with Next.js
+- Optimized bundle size
+- Fast page transitions
+- Efficient chart rendering with Recharts
+
+## 📝 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## 🔒 Security Features
+
+- Role-based authentication
+- Secure password handling (in production, use proper encryption)
+- Session management
+- Protected routes
 
 ## 🎯 Future Enhancements
 
-Potential features for future versions:
-- Task editing and deletion
-- Task status updates
-- User authentication
-- Database integration
-- Real-time collaboration
+- Real-time notifications
+- Task assignment functionality
+- Team collaboration features
+- Advanced filtering and search
+- Dark mode toggle
+- Mobile responsive layouts
+- Calendar integration
+- File upload and management
 - Email notifications
-- Task comments and attachments
-- Export reports as PDF
-- Advanced filtering and sorting
-- Task templates
+- Advanced reporting
+- Export functionality
+- Integration with third-party tools
+
+## 📄 License
+
+This project is for demonstration purposes.
+
+## 👥 Credits
+
+Designed and developed as a modern SaaS dashboard template inspired by premium UI/UX patterns from Dribbble and Behance.
