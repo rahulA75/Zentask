@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface User {
   id: string;
@@ -19,6 +19,7 @@ interface Task {
   status: 'todo' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   assignedTo: string;
+  assignedBy: string;
   createdAt: Date;
   dueDate: Date;
 }
@@ -39,8 +40,15 @@ interface Ticket {
   timestamp: Date;
 }
 
+const allUsers = [
+  { id: '1', name: 'John Smith', email: 'manager@panze.studio', role: 'manager' as const, avatar: 'JS' },
+  { id: '2', name: 'Sarah Johnson', email: 'sarah@panze.studio', role: 'employee' as const, avatar: 'SJ' },
+  { id: '3', name: 'Mike Wilson', email: 'mike@panze.studio', role: 'employee' as const, avatar: 'MW' },
+  { id: '4', name: 'Emma Davis', email: 'emma@panze.studio', role: 'employee' as const, avatar: 'ED' }
+];
+
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard'>('login');
+  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard' | 'assign-task'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'today' | 'tomorrow'>('today');
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
@@ -54,35 +62,15 @@ export default function Home() {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerRole, setRegisterRole] = useState<'manager' | 'employee'>('employee');
 
-  const handleLogin = () => {
-    setCurrentUser({
-      id: '1',
-      name: 'John Smith',
-      email: loginEmail,
-      role: loginEmail.includes('manager') ? 'manager' : 'employee',
-      avatar: 'JS'
-    });
-    setCurrentView('dashboard');
-  };
+  // Task assignment states
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [taskProject, setTaskProject] = useState('');
+  const [taskPriority, setTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [taskAssignee, setTaskAssignee] = useState('');
 
-  const handleRegister = () => {
-    setCurrentUser({
-      id: '2',
-      name: registerName,
-      email: registerEmail,
-      role: registerRole,
-      avatar: registerName.split(' ').map(n => n[0]).join('').toUpperCase()
-    });
-    setCurrentView('dashboard');
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setCurrentView('login');
-  };
-
-  // Sample data
-  const tasks: Task[] = [
+  // All tasks state
+  const [allTasks, setAllTasks] = useState<Task[]>([
     {
       id: '1',
       title: 'BrightBridge',
@@ -91,6 +79,7 @@ export default function Home() {
       status: 'in-progress',
       priority: 'high',
       assignedTo: '1',
+      assignedBy: '1',
       createdAt: new Date('2024-01-10'),
       dueDate: new Date('2024-01-11')
     },
@@ -102,10 +91,104 @@ export default function Home() {
       status: 'todo',
       priority: 'medium',
       assignedTo: '1',
+      assignedBy: '1',
       createdAt: new Date('2024-01-10'),
       dueDate: new Date('2024-01-12')
+    },
+    {
+      id: '3',
+      title: 'API Development',
+      description: 'Build REST API endpoints',
+      project: 'Backend Service',
+      status: 'in-progress',
+      priority: 'high',
+      assignedTo: '2',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-09'),
+      dueDate: new Date('2024-01-15')
+    },
+    {
+      id: '4',
+      title: 'Database Migration',
+      description: 'Migrate to PostgreSQL',
+      project: 'Infrastructure',
+      status: 'completed',
+      priority: 'medium',
+      assignedTo: '3',
+      assignedBy: '1',
+      createdAt: new Date('2024-01-05'),
+      dueDate: new Date('2024-01-10')
     }
-  ];
+  ]);
+
+  const handleLogin = () => {
+    const user = allUsers.find(u => u.email === loginEmail) || {
+      id: '1',
+      name: 'John Smith',
+      email: loginEmail,
+      role: loginEmail.includes('manager') ? 'manager' as const : 'employee' as const,
+      avatar: 'JS'
+    };
+    setCurrentUser(user);
+    setCurrentView('dashboard');
+  };
+
+  const handleRegister = () => {
+    setCurrentUser({
+      id: Date.now().toString(),
+      name: registerName,
+      email: registerEmail,
+      role: registerRole,
+      avatar: registerName.split(' ').map(n => n[0]).join('').toUpperCase()
+    });
+    setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentView('login');
+    setActiveNav('dashboard');
+  };
+
+  const handleAssignTask = () => {
+    if (!taskTitle || !taskDescription || !taskProject || !taskAssignee) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: taskProject,
+      description: taskTitle,
+      project: taskProject,
+      status: 'todo',
+      priority: taskPriority,
+      assignedTo: taskAssignee,
+      assignedBy: currentUser?.id || '',
+      createdAt: new Date(),
+      dueDate: new Date(Date.now() + 86400000 * 7)
+    };
+
+    setAllTasks([...allTasks, newTask]);
+    setTaskTitle('');
+    setTaskDescription('');
+    setTaskProject('');
+    setTaskPriority('medium');
+    setTaskAssignee('');
+    setCurrentView('dashboard');
+    alert('Task assigned successfully!');
+  };
+
+  // Filter tasks based on user role
+  const getFilteredTasks = () => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'manager') {
+      return allTasks; // Managers see all tasks
+    }
+    return allTasks.filter(task => task.assignedTo === currentUser.id); // Employees see only their tasks
+  };
+
+  const tasks = getFilteredTasks();
 
   const meetings: Meeting[] = [
     { id: '1', title: 'Design Review', time: '10:00 AM', platform: 'meet', projectName: 'BrightBridge' },
@@ -118,11 +201,50 @@ export default function Home() {
     { id: '2', userName: 'Mike Wilson', userAvatar: 'MW', message: 'Question about API integration...', timestamp: new Date() }
   ];
 
+  // Calculate stats based on filtered tasks
+  const getTaskStats = () => {
+    const totalTasks = tasks.length;
+    const todoTasks = tasks.filter(t => t.status === 'todo').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const highPriority = tasks.filter(t => t.priority === 'high').length;
+    const mediumPriority = tasks.filter(t => t.priority === 'medium').length;
+    const lowPriority = tasks.filter(t => t.priority === 'low').length;
+
+    return {
+      totalTasks,
+      todoTasks,
+      inProgressTasks,
+      completedTasks,
+      highPriority,
+      mediumPriority,
+      lowPriority
+    };
+  };
+
+  const stats = getTaskStats();
+
   const projectsData = [
-    { name: 'In Progress', value: 14, color: '#FF9F43' },
-    { name: 'Completed', value: 32, color: '#5B8DEF' },
-    { name: 'Not Started', value: 54, color: '#E0E0E0' }
-  ];
+    { name: 'In Progress', value: stats.inProgressTasks, color: '#FF9F43' },
+    { name: 'Completed', value: stats.completedTasks, color: '#5B8DEF' },
+    { name: 'Not Started', value: stats.todoTasks, color: '#E0E0E0' }
+  ].filter(item => item.value > 0);
+
+  const priorityData = [
+    { name: 'High', value: stats.highPriority, color: '#EF4444' },
+    { name: 'Medium', value: stats.mediumPriority, color: '#FF9F43' },
+    { name: 'Low', value: stats.lowPriority, color: '#22C55E' }
+  ].filter(item => item.value > 0);
+
+  // Task distribution by user (only for managers)
+  const getTaskDistribution = () => {
+    if (currentUser?.role !== 'manager') return [];
+    
+    return allUsers.map(user => ({
+      name: user.name,
+      tasks: allTasks.filter(t => t.assignedTo === user.id).length
+    })).filter(item => item.tasks > 0);
+  };
 
   const incomeExpenseData = [
     { month: 'Jan', income: 20000, expense: 12000 },
@@ -203,7 +325,7 @@ export default function Home() {
           
           <div className="mt-6 text-center text-sm text-gray-600">
             <p>Demo accounts:</p>
-            <p>Manager: manager@panze.studio | Employee: employee@panze.studio</p>
+            <p>Manager: manager@panze.studio | Employee: sarah@panze.studio</p>
           </div>
         </div>
       </div>
@@ -295,6 +417,116 @@ export default function Home() {
                   className="text-purple-600 hover:text-purple-700 font-semibold"
                 >
                   Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Task Assignment Screen
+  if (currentView === 'assign-task') {
+    return (
+      <div className="min-h-screen bg-[#F7F9FB]">
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="px-8 py-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">panze studio</h1>
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
+        </header>
+
+        <div className="max-w-2xl mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Assign New Task</h2>
+            <p className="text-gray-600 mb-8">
+              {currentUser?.role === 'manager' 
+                ? 'Assign tasks to team members or yourself' 
+                : 'Assign a task to yourself'}
+            </p>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Task Title</label>
+                <input
+                  type="text"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="e.g., Complete project proposal"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  placeholder="Describe the task in detail..."
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name</label>
+                <input
+                  type="text"
+                  value={taskProject}
+                  onChange={(e) => setTaskProject(e.target.value)}
+                  placeholder="e.g., Website Redesign"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
+                  <select
+                    value={taskPriority}
+                    onChange={(e) => setTaskPriority(e.target.value as 'low' | 'medium' | 'high')}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Assign To</label>
+                  <select
+                    value={taskAssignee}
+                    onChange={(e) => setTaskAssignee(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select assignee...</option>
+                    <option value={currentUser?.id}>Myself</option>
+                    {currentUser?.role === 'manager' && allUsers.filter(u => u.id !== currentUser?.id).map(user => (
+                      <option key={user.id} value={user.id}>{user.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  onClick={handleAssignTask}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl"
+                >
+                  Assign Task
+                </button>
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="px-8 py-3 border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -425,9 +657,26 @@ export default function Home() {
         {/* Main Content */}
         <main className="flex-1 p-8">
           {/* Page Title */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Project Dashboard</h2>
-            <p className="text-gray-600 mt-1">Manage and track your projects</p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {currentUser?.role === 'manager' ? 'Manager Dashboard' : 'My Dashboard'}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {currentUser?.role === 'manager' 
+                  ? 'Manage and track all team projects' 
+                  : 'Track your assigned tasks and progress'}
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentView('assign-task')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Assign Task
+            </button>
           </div>
 
           <div className="grid grid-cols-12 gap-6">
@@ -435,7 +684,9 @@ export default function Home() {
             <div className="col-span-3">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-gray-900">My Tasks</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {currentUser?.role === 'manager' ? 'All Tasks' : 'My Tasks'}
+                  </h3>
                   <button className="text-gray-400 hover:text-gray-600">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -473,10 +724,12 @@ export default function Home() {
                 </select>
 
                 <div className="space-y-3">
-                  {tasks.map(task => (
+                  {tasks.slice(0, 4).map(task => (
                     <div key={task.id} className={`p-4 rounded-xl border ${
                       task.status === 'in-progress' 
                         ? 'bg-blue-50 border-blue-100' 
+                        : task.status === 'completed'
+                        ? 'bg-green-50 border-green-100'
                         : 'bg-gray-50 border-gray-100'
                     }`}>
                       <div className="flex items-start gap-3">
@@ -486,6 +739,11 @@ export default function Home() {
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900 text-sm mb-1">{task.title}</h4>
                           <p className="text-xs text-gray-600">{task.description}</p>
+                          {currentUser?.role === 'manager' && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Assigned to: {allUsers.find(u => u.id === task.assignedTo)?.name}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -496,44 +754,126 @@ export default function Home() {
 
             {/* Center Column */}
             <div className="col-span-6 space-y-6">
-              {/* Projects Overview & Income vs Expense */}
+              {/* Task Stats Summary */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-blue-600">{stats.totalTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">Total Tasks</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-yellow-600">{stats.todoTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">To Do</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-orange-600">{stats.inProgressTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">In Progress</div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div className="text-2xl font-bold text-green-600">{stats.completedTasks}</div>
+                  <div className="text-xs text-gray-600 mt-1">Completed</div>
+                </div>
+              </div>
+
+              {/* Projects Overview & Priority Distribution */}
               <div className="grid grid-cols-2 gap-6">
                 {/* Projects Overview */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-6">Projects Overview</h3>
-                  <div className="flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={projectsData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {projectsData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-2 mt-4">
-                    {projectsData.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                          <span className="text-gray-600">{item.name}</span>
-                        </div>
-                        <span className="font-semibold text-gray-900">{item.value}</span>
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Task Status</h3>
+                  {projectsData.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={projectsData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {projectsData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                    ))}
-                  </div>
+                      <div className="space-y-2 mt-4">
+                        {projectsData.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                              <span className="text-gray-600">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">No tasks yet</div>
+                  )}
                 </div>
 
-                {/* Income vs Expense */}
+                {/* Priority Distribution */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Priority Distribution</h3>
+                  {priorityData.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={priorityData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {priorityData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="space-y-2 mt-4">
+                        {priorityData.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                              <span className="text-gray-600">{item.name}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">No tasks yet</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Task Distribution by Team (Manager Only) or Income vs Expense (Employee) */}
+              {currentUser?.role === 'manager' ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-6">Task Distribution by Team Member</h3>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={getTaskDistribution()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="name" stroke="#999" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#999" style={{ fontSize: '12px' }} />
+                      <Tooltip />
+                      <Bar dataKey="tasks" fill="#5B8DEF" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-2">Income vs Expense</h3>
                   <div className="flex gap-4 mb-4">
@@ -546,7 +886,7 @@ export default function Home() {
                       <div className="text-xl font-bold text-orange-600">$13,290</div>
                     </div>
                   </div>
-                  <ResponsiveContainer width="100%" height={150}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={incomeExpenseData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                       <XAxis dataKey="month" stroke="#999" style={{ fontSize: '12px' }} />
@@ -557,7 +897,7 @@ export default function Home() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
+              )}
 
               {/* Invoice Overview */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
