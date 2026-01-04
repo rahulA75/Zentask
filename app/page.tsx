@@ -24,6 +24,14 @@ interface Task {
   dueDate: Date;
 }
 
+interface Notification {
+  id: string;
+  message: string;
+  taskId: string;
+  read: boolean;
+  timestamp: Date;
+}
+
 interface Meeting {
   id: string;
   title: string;
@@ -48,11 +56,12 @@ const allUsers = [
 ];
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard' | 'assign-task'>('login');
+  const [currentView, setCurrentView] = useState<'login' | 'register' | 'dashboard' | 'assign-task' | 'tasks'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<'today' | 'tomorrow'>('today');
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('month');
   const [activeNav, setActiveNav] = useState('dashboard');
+  const [showNotifications, setShowNotifications] = useState(false);
   
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -121,6 +130,9 @@ export default function Home() {
     }
   ]);
 
+  // Notifications state
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
   const handleLogin = () => {
     const user = allUsers.find(u => u.email === loginEmail) || {
       id: '1',
@@ -148,6 +160,7 @@ export default function Home() {
     setCurrentUser(null);
     setCurrentView('login');
     setActiveNav('dashboard');
+    setNotifications([]);
   };
 
   const handleAssignTask = () => {
@@ -170,6 +183,20 @@ export default function Home() {
     };
 
     setAllTasks([...allTasks, newTask]);
+
+    // Create notification for the assignee if it's not self-assignment
+    if (taskAssignee !== currentUser?.id) {
+      const assignerName = currentUser?.name || 'Someone';
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        message: `${assignerName} assigned you a new task: "${taskTitle}"`,
+        taskId: newTask.id,
+        read: false,
+        timestamp: new Date()
+      };
+      setNotifications([newNotification, ...notifications]);
+    }
+
     setTaskTitle('');
     setTaskDescription('');
     setTaskProject('');
@@ -179,16 +206,46 @@ export default function Home() {
     alert('Task assigned successfully!');
   };
 
+  const handleUpdateTaskStatus = (taskId: string, newStatus: 'todo' | 'in-progress' | 'completed') => {
+    setAllTasks(allTasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ));
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(notifications.map(notif =>
+      notif.id === notificationId ? { ...notif, read: true } : notif
+    ));
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+    setShowNotifications(false);
+  };
+
   // Filter tasks based on user role
   const getFilteredTasks = () => {
     if (!currentUser) return [];
     if (currentUser.role === 'manager') {
-      return allTasks; // Managers see all tasks
+      return allTasks;
     }
-    return allTasks.filter(task => task.assignedTo === currentUser.id); // Employees see only their tasks
+    return allTasks.filter(task => task.assignedTo === currentUser.id);
+  };
+
+  // Filter notifications for current user
+  const getUserNotifications = () => {
+    if (!currentUser) return [];
+    // In a real app, notifications would be stored per user
+    // For demo, we'll show notifications for tasks assigned to current user
+    return notifications.filter(notif => {
+      const task = allTasks.find(t => t.id === notif.taskId);
+      return task && task.assignedTo === currentUser.id;
+    });
   };
 
   const tasks = getFilteredTasks();
+  const userNotifications = getUserNotifications();
+  const unreadCount = userNotifications.filter(n => !n.read).length;
 
   const meetings: Meeting[] = [
     { id: '1', title: 'Design Review', time: '10:00 AM', platform: 'meet', projectName: 'BrightBridge' },
@@ -236,7 +293,6 @@ export default function Home() {
     { name: 'Low', value: stats.lowPriority, color: '#22C55E' }
   ].filter(item => item.value > 0);
 
-  // Task distribution by user (only for managers)
   const getTaskDistribution = () => {
     if (currentUser?.role !== 'manager') return [];
     
@@ -536,19 +592,162 @@ export default function Home() {
     );
   }
 
-  // Dashboard
+  // All Tasks View
+  if (currentView === 'tasks') {
+    return (
+      <div className="min-h-screen bg-[#F7F9FB]">
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+          <div className="px-8 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-gray-900">panze studio</h1>
+              
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setCurrentView('dashboard')}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                >
+                  ← Back to Dashboard
+                </button>
+                
+                <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-gray-900">{currentUser?.name}</div>
+                    <div className="text-xs text-gray-500 capitalize">{currentUser?.role}</div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold shadow-lg">
+                    {currentUser?.avatar}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto p-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">
+                {currentUser?.role === 'manager' ? 'All Team Tasks' : 'My Tasks'}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {currentUser?.role === 'manager' 
+                  ? `Managing ${tasks.length} tasks across the team` 
+                  : `You have ${tasks.length} tasks assigned`}
+              </p>
+            </div>
+            <button
+              onClick={() => setCurrentView('assign-task')}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Assign New Task
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tasks.length === 0 ? (
+              <div className="col-span-3 text-center py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">No tasks assigned yet.</p>
+              </div>
+            ) : (
+              tasks.map(task => (
+                <div
+                  key={task.id}
+                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg">
+                        {task.project.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
+                        <p className="text-xs text-gray-500">{task.project}</p>
+                      </div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      task.priority === 'high' 
+                        ? 'bg-red-100 text-red-700' 
+                        : task.priority === 'medium' 
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {task.priority.toUpperCase()}
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 text-sm mb-4">{task.description}</p>
+
+                  <div className="mb-4">
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">Status</label>
+                    <select
+                      value={task.status}
+                      onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as 'todo' | 'in-progress' | 'completed')}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="todo">To Do</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    {currentUser?.role === 'manager' && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-semibold">
+                          {allUsers.find(u => u.id === task.assignedTo)?.avatar}
+                        </div>
+                        <span className="text-gray-600">{allUsers.find(u => u.id === task.assignedTo)?.name}</span>
+                      </div>
+                    )}
+                    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      task.status === 'completed'
+                        ? 'bg-green-100 text-green-700'
+                        : task.status === 'in-progress'
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {task.status === 'in-progress' ? 'IN PROGRESS' : task.status.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Dashboard (existing code continues...)
+  // I'll now add the notification dropdown and navigation handler
+  
+  const handleNavClick = (navId: string) => {
+    setActiveNav(navId);
+    if (navId === 'tasks') {
+      setCurrentView('tasks');
+    } else if (navId === 'dashboard') {
+      setCurrentView('dashboard');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F9FB]">
       {/* Top Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center gap-8">
               <h1 className="text-2xl font-bold text-gray-900">panze studio</h1>
             </div>
             
-            {/* Filter Pills */}
             <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1">
               <button
                 onClick={() => setSelectedPeriod('today')}
@@ -582,7 +781,6 @@ export default function Home() {
               </button>
             </div>
             
-            {/* Search and User */}
             <div className="flex items-center gap-4">
               <div className="relative">
                 <input
@@ -595,12 +793,71 @@ export default function Home() {
                 </svg>
               </div>
               
-              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="font-bold text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllNotificationsAsRead}
+                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {userNotifications.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                          <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                          No notifications
+                        </div>
+                      ) : (
+                        userNotifications.map(notif => (
+                          <div
+                            key={notif.id}
+                            onClick={() => markNotificationAsRead(notif.id)}
+                            className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                              !notif.read ? 'bg-blue-50' : ''
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 flex-shrink-0">
+                                {notif.read && <div className="w-2 h-2 rounded-full bg-gray-300"></div>}
+                              </div>
+                              <div className="flex-1">
+                                <p className={`text-sm ${!notif.read ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                                  {notif.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {notif.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
                 <div className="text-right">
@@ -617,7 +874,6 @@ export default function Home() {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-20 bg-white border-r border-gray-200 min-h-screen p-4">
           <nav className="space-y-4">
             {[
@@ -630,7 +886,7 @@ export default function Home() {
             ].map(item => (
               <button
                 key={item.id}
-                onClick={() => setActiveNav(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 className={`w-full p-3 rounded-2xl transition-all ${
                   activeNav === item.id
                     ? 'bg-gray-900 text-white shadow-lg'
@@ -654,9 +910,8 @@ export default function Home() {
           </nav>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content - Rest of dashboard content continues here... */}
         <main className="flex-1 p-8">
-          {/* Page Title */}
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">
@@ -679,18 +934,19 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Dashboard content grid with charts - keeping the existing layout */}
           <div className="grid grid-cols-12 gap-6">
-            {/* Left Column - My Tasks */}
             <div className="col-span-3">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-gray-900">
                     {currentUser?.role === 'manager' ? 'All Tasks' : 'My Tasks'}
                   </h3>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
+                  <button
+                    onClick={() => setCurrentView('tasks')}
+                    className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                  >
+                    View All
                   </button>
                 </div>
 
@@ -752,9 +1008,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Center Column */}
+            {/* Center Column - Charts */}
             <div className="col-span-6 space-y-6">
-              {/* Task Stats Summary */}
               <div className="grid grid-cols-4 gap-4">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                   <div className="text-2xl font-bold text-blue-600">{stats.totalTasks}</div>
@@ -774,9 +1029,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Projects Overview & Priority Distribution */}
               <div className="grid grid-cols-2 gap-6">
-                {/* Projects Overview */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-6">Task Status</h3>
                   {projectsData.length > 0 ? (
@@ -817,7 +1070,6 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Priority Distribution */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-6">Priority Distribution</h3>
                   {priorityData.length > 0 ? (
@@ -859,7 +1111,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Task Distribution by Team (Manager Only) or Income vs Expense (Employee) */}
               {currentUser?.role === 'manager' ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-6">Task Distribution by Team Member</h3>
@@ -899,7 +1150,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Invoice Overview */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-6">Invoice Overview</h3>
                 <div className="space-y-4">
@@ -923,7 +1173,6 @@ export default function Home() {
 
             {/* Right Column */}
             <div className="col-span-3 space-y-6">
-              {/* My Meetings */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-bold text-gray-900">My Meetings</h3>
@@ -947,7 +1196,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Open Tickets */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-6">Open Tickets</h3>
                 <div className="space-y-4">
